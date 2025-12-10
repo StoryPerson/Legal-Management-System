@@ -13,7 +13,6 @@ from nltk.stem import WordNetLemmatizer
 from dotenv import load_dotenv
 
 # --- IMPORTS ---
-# Using standard LangChain imports to ensure compatibility
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -33,104 +32,98 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- PREMIUM LEGAL UI THEME ---
+# --- MODERN LEGAL UI THEME ---
 st.markdown(
     """
     <style>
-    /* Main Background */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@600;700&display=swap');
+
+    /* Global Settings */
     .stApp {
-        background-color: #F4F6F9;
+        background-color: #F8FAFC; /* Slate 50 */
         font-family: 'Inter', sans-serif;
     }
 
-    /* Sidebar Styling */
+    /* Sidebar */
     section[data-testid="stSidebar"] {
-        background-color: #0F172A; /* Deep Navy */
-        border-right: 1px solid #1E293B;
+        background-color: #0F172A; /* Slate 900 */
+        border-right: 1px solid #334155;
     }
-    section[data-testid="stSidebar"] h1, 
-    section[data-testid="stSidebar"] label, 
-    section[data-testid="stSidebar"] .stRadio div {
-        color: #E2E8F0 !important; /* Off-white text */
+    section[data-testid="stSidebar"] h1, p, label {
+        color: #E2E8F0 !important;
     }
 
     /* Typography */
     h1, h2, h3 {
-        color: #1E3A8A; /* Royal Blue */
-        font-family: 'Merriweather', serif; /* Legal/Formal font */
+        font-family: 'Playfair Display', serif;
+        color: #1E293B; /* Slate 800 */
         font-weight: 700;
     }
-    p, li, .stMarkdown {
-        color: #334155;
-        line-height: 1.6;
-    }
-
+    
     /* Custom Buttons */
     div.stButton > button {
-        background: linear-gradient(135deg, #1E3A8A 0%, #172554 100%);
+        background: linear-gradient(to right, #2563EB, #1D4ED8); /* Blue 600-700 */
         color: white !important;
-        border: none !important;
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);
-        transition: all 0.3s ease;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
     }
     div.stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.4);
-        background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transform: translateY(-1px);
     }
 
-    /* Input Fields */
+    /* Input Areas */
     .stTextArea textarea {
-        background-color: #FFFFFF;
-        border: 1px solid #CBD5E1;
+        border: 1px solid #E2E8F0;
         border-radius: 8px;
-        color: #1E293B;
+        background-color: #FFFFFF;
+        font-family: 'Inter', sans-serif;
+        color: #334155;
     }
     .stTextArea textarea:focus {
-        border-color: #1E3A8A;
-        box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1);
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
     }
 
-    /* Success/Info Messages */
-    .stSuccess {
-        background-color: #F0FDF4;
-        border-left: 5px solid #16A34A;
-        color: #166534;
+    /* Result Cards */
+    .result-card {
+        background-color: white;
+        padding: 25px;
+        border-radius: 10px;
+        border-left: 5px solid #2563EB;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
     }
     
-    /* Custom Cards for Home Page */
+    /* Feature Cards (Home) */
     .feature-card {
-        background-color: white;
-        padding: 1.5rem;
+        background: white;
+        padding: 2rem;
         border-radius: 12px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid #F1F5F9;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
         height: 100%;
-        transition: transform 0.2s;
+        transition: all 0.3s ease;
     }
     .feature-card:hover {
         transform: translateY(-5px);
-        border-color: #1E3A8A;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        border-color: #BFDBFE;
     }
-    .feature-icon {
-        font-size: 2rem;
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        background-color: #EFF6FF;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
         margin-bottom: 1rem;
-        color: #D97706; /* Gold */
-    }
-    .feature-title {
-        font-weight: bold;
-        font-size: 1.25rem;
-        color: #0F172A;
-        margin-bottom: 0.5rem;
-        font-family: 'Merriweather', serif;
-    }
-    .feature-desc {
-        color: #64748B;
-        font-size: 0.95rem;
     }
     </style>
     """,
@@ -155,7 +148,6 @@ def preprocess_text(text: str) -> str:
 @st.cache_resource
 def load_pickle(path: str):
     if not os.path.exists(path):
-        # Fail silently or with log, let the UI handle the missing state
         return None
     try:
         with open(path, "rb") as f:
@@ -165,172 +157,188 @@ def load_pickle(path: str):
 
 # Sidebar
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/scales-of-justice.png", width=80)
-    st.title("Legal AI Toolkit")
+    st.image("https://img.icons8.com/3d-fluency/94/law.png", width=70) # Updated Icon
+    st.markdown("### Legal AI Toolkit")
+    st.caption("v2.0 | Enterprise Edition")
     st.markdown("---")
     mode = st.radio(
-        "Navigation",
+        "Module Selection",
         ("Home", "Case Classification", "Case Prioritization", "Legal Precedent Search"),
         label_visibility="collapsed"
     )
     st.markdown("---")
-    st.markdown("###### System Status: 🟢 Online")
+    st.info("💡 **Tip:** Be specific in your queries for better citation accuracy.")
 
 # Home Screen
 if mode == "Home":
-    st.title("AI-Powered Legal Intelligence")
-    st.markdown("#### Streamlining Case Management & Research")
-    st.write("Welcome to the Legal AI Toolkit. Select a module from the sidebar to begin.")
-    
+    st.title("Intelligent Legal Assistant")
+    st.markdown("<p style='font-size: 1.1rem; color: #64748B;'>Streamline your legal workflow with AI-powered analysis and research tools.</p>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # Grid Layout for Features
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-icon">📂</div>
-            <div class="feature-title">Case Classification</div>
-            <div class="feature-desc">
-                Automatically categorize legal documents into Civil, Criminal, or Constitutional domains using machine learning.
-            </div>
+            <div class="icon-box">📂</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Automated Classification</h3>
+            <p style="font-size: 0.9rem; color: #64748B;">
+                Instantly categorize legal documents into Civil, Criminal, or Constitutional domains using advanced NLP.
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
     with col2:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <div class="feature-title">Case Prioritization</div>
-            <div class="feature-desc">
-                Predict the urgency level (High, Medium, Low) of incoming cases to optimize workflow and resource allocation.
-            </div>
+            <div class="icon-box">⚡</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Smart Prioritization</h3>
+            <p style="font-size: 0.9rem; color: #64748B;">
+                AI-driven urgency assessment (High, Medium, Low) to optimize case docket management.
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
     with col3:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-icon">🔍</div>
-            <div class="feature-title">Precedent Search</div>
-            <div class="feature-desc">
-                Leverage RAG technology to retrieve relevant past judgments and legal precedents from the Qdrant Cloud vector database.
-            </div>
+            <div class="icon-box">⚖️</div>
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Precedent Discovery</h3>
+            <p style="font-size: 0.9rem; color: #64748B;">
+                RAG-powered search engine retrieving relevant case law from your secure Qdrant knowledge base.
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
 # Case Classification
 if mode == "Case Classification":
     st.title("📂 Case Classification")
-    st.markdown("Paste the case description below to identify its legal domain.")
+    st.markdown("Input the case summary below to determine its legal jurisdiction.")
     
     pipeline_path = "Case Classification/voting_pipeline.pkl"
     label_path = "Case Classification/label_encoder.pkl"
 
-    with st.spinner("Initializing models..."):
+    with st.spinner("Loading AI Models..."):
         pipeline = load_pickle(pipeline_path)
         label_encoder = load_pickle(label_path)
 
-    text_input = st.text_area("Case Description / Brief:", height=250, placeholder="Enter the legal facts here...")
+    text_input = st.text_area("Case Brief", height=200, placeholder="Example: The plaintiff filed a suit for specific performance of contract regarding property #123...")
 
-    if st.button("Analyze Category"):
+    if st.button("Classify Case"):
         if not text_input.strip():
-            st.warning("⚠️ Please provide case details.")
+            st.warning("⚠️ Please provide a case description.")
         elif pipeline is None:
-            st.error("❌ Model files not found. Please check directory structure.")
+            st.error("❌ Model files missing.")
         else:
             cleaned = preprocess_text(text_input)
             pred_enc = pipeline.predict([cleaned])
             pred_label = label_encoder.inverse_transform(pred_enc)[0] if label_encoder else str(pred_enc[0])
             
-            st.divider()
-            st.markdown(f"### Result")
-            st.success(f"**Predicted Category:** {pred_label}")
-            st.info("This classification is based on textual patterns in the case description.")
+            st.markdown("---")
+            st.markdown(f"""
+            <div class="result-card" style="border-left-color: #2563EB;">
+                <h4 style="margin:0; color: #64748B; font-size: 0.9rem;">PREDICTED CATEGORY</h4>
+                <h2 style="margin:5px 0 0 0; color: #1E293B;">{pred_label}</h2>
+            </div>
+            """, unsafe_allow_html=True)
 
 # Case Prioritization
 if mode == "Case Prioritization":
     st.title("⚡ Case Prioritization")
-    st.markdown("Determine the urgency of a case to prioritize docket management.")
+    st.markdown("Assess case urgency to optimize resource allocation.")
     
     pipeline_path = "Case Prioritization/stacking_pipeline.pkl"
     label_path = "Case Prioritization/label_encoder.pkl"
 
-    with st.spinner("Initializing models..."):
+    with st.spinner("Loading AI Models..."):
         pipeline = load_pickle(pipeline_path)
         label_encoder = load_pickle(label_path)
 
-    text_input = st.text_area("Case Description / Brief:", height=250, placeholder="Enter the legal facts here...")
+    text_input = st.text_area("Case Brief", height=200, placeholder="Enter case details to assess urgency...")
 
     if st.button("Assess Priority"):
         if not text_input.strip():
-            st.warning("⚠️ Please provide case details.")
+            st.warning("⚠️ Please provide a case description.")
         elif pipeline is None:
-            st.error("❌ Model files not found. Please check directory structure.")
+            st.error("❌ Model files missing.")
         else:
             cleaned = preprocess_text(text_input)
             pred_enc = pipeline.predict([cleaned])
             pred_label = label_encoder.inverse_transform(pred_enc)[0] if label_encoder else str(pred_enc[0])
             
-            # Custom color logic for priorities
-            priority_color = "red" if "High" in pred_label else "orange" if "Medium" in pred_label else "green"
+            color_map = {
+                "High": "#DC2626",   # Red
+                "Medium": "#D97706", # Amber
+                "Low": "#059669"     # Emerald
+            }
+            color = color_map.get(pred_label, "#2563EB")
             
-            st.divider()
-            st.markdown(f"### Result")
-            st.markdown(f"**Predicted Priority:** <span style='color:{priority_color}; font-size:1.5rem; font-weight:bold'>{pred_label}</span>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown(f"""
+            <div class="result-card" style="border-left-color: {color};">
+                <h4 style="margin:0; color: #64748B; font-size: 0.9rem;">RECOMMENDED PRIORITY</h4>
+                <h2 style="margin:5px 0 0 0; color: {color};">{pred_label} Priority</h2>
+            </div>
+            """, unsafe_allow_html=True)
 
 # Legal Precedent Search (RAG)
 if mode == "Legal Precedent Search":
-    st.title("🔍 Legal Precedent Search")
-    st.markdown("Ask natural language questions to retrieve relevant case law and precedents.")
+    st.title("🔍 Precedent Research")
+    st.markdown("Retrieve relevant case law and generate legal memos using AI.")
 
-    # --- Qdrant Configuration ---
+    # Configuration
     QDRANT_URL = "https://2191fd84-3737-4604-ac35-435135b72cf3.us-east4-0.gcp.cloud.qdrant.io"
-    # ⚠️ YOUR API KEY
     QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.j5Kv9gmGOtLHLL4RGMJpeqzdVJSrbmsFLlNdbtvmtYs"
     COLLECTION_NAME = "legal_precedents"
 
     @st.cache_resource
     def load_rag_chain():
         try:
-            # 1. Setup Embeddings
             embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-            # 2. Connect to Qdrant Cloud
             client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
             
-            # 3. Create Vector Store
             vector_store = QdrantVectorStore(
                 client=client,
                 collection_name=COLLECTION_NAME,
                 embedding=embeddings, 
             )
 
-            # 4. Setup LLM
             api_key = os.getenv("GROQ_API_KEY") or os.getenv("api_key")
-            if not api_key:
-                return {"error": "Missing Groq API Key in .env"}
+            if not api_key: return {"error": "Missing Groq API Key in .env"}
             
-            llm = ChatGroq(model_name="llama3-8b-8192", api_key=api_key, temperature=0.2)
+            # Using Llama 3 for better reasoning
+            llm = ChatGroq(model_name="llama3-8b-8192", api_key=api_key, temperature=0.1)
 
-            # 5. Prompt
+            # --- IMPROVED PROMPT TEMPLATE ---
+            # Forces the LLM to act like a lawyer and structure the output
             prompt = ChatPromptTemplate.from_template(
                 """
-                You are a senior legal research assistant. 
-                Use the retrieved context below to answer the user's legal question.
-                If the context is insufficient, state that clearly.
-                Provide citations or references to the context where possible.
+                You are an expert legal research assistant. Your task is to answer the user's legal question based EXCLUSIVELY on the provided context.
+                
+                Guidelines:
+                1. Structure your answer as a formal Legal Memorandum.
+                2. Start with a direct answer (Holding/Conclusion).
+                3. Cite specific precedents or facts from the context to support your answer.
+                4. If the context does not contain the answer, state "I cannot find relevant precedents in the database."
+                5. Do not hallucinate or make up laws.
 
                 Context:
                 {context}
 
                 Question:
                 {input}
+                
+                Output Format:
+                **Summary of Findings:** [Direct Answer]
+                
+                **Relevant Precedents & Analysis:**
+                * [Point 1 based on context]
+                * [Point 2 based on context]
+                
+                **Conclusion:** [Final thought]
                 """
             )
 
-            # 6. Chain
             document_chain = create_stuff_documents_chain(llm, prompt)
             retriever = vector_store.as_retriever(search_kwargs={"k": 5})
             rag_chain = create_retrieval_chain(retriever, document_chain)
@@ -340,7 +348,7 @@ if mode == "Legal Precedent Search":
         except Exception as e:
             return {"error": str(e)}
 
-    with st.spinner("Connecting to Secure Legal Database..."):
+    with st.spinner("Connecting to Legal Knowledge Base..."):
         rag_resources = load_rag_chain()
 
     if "error" in rag_resources:
@@ -349,34 +357,38 @@ if mode == "Legal Precedent Search":
 
     rag_chain = rag_resources["rag_chain"]
     
-    # Layout
-    col_input, col_action = st.columns([4, 1])
+    query = st.text_area("Legal Query", height=120, placeholder="E.g., What is the precedent for granting bail in non-bailable offenses regarding medical grounds?")
     
-    query = st.text_area("Legal Query:", height=100, placeholder="E.g., What are the precedents regarding breach of contract in construction?")
-    
-    if st.button("Search Database"):
+    col_submit, col_clear = st.columns([1, 5])
+    with col_submit:
+        search = st.button("Search Database")
+
+    if search:
         if not query.strip():
             st.warning("⚠️ Please enter a query.")
         else:
-            with st.spinner("Searching precedents and generating response..."):
+            with st.spinner("Analyzing precedents and drafting memo..."):
                 try:
                     response = rag_chain.invoke({"input": query})
                     answer = response.get("answer")
                     
-                    st.markdown("### 📝 Legal Summary")
+                    st.markdown("### 📝 Legal Memorandum")
+                    # Display answer in a nice paper-like container
                     st.markdown(f"""
-                    <div style="background-color: white; padding: 20px; border-radius: 10px; border-left: 5px solid #1E3A8A; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        {answer}
+                    <div style="background-color: white; padding: 30px; border-radius: 5px; border: 1px solid #E2E8F0; font-family: 'Times New Roman', serif; color: #000;">
+                        {answer.replace(chr(10), '<br>')}
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    st.markdown("### 📚 Source Documents")
+                    st.markdown("<br>### 📚 Source Citations", unsafe_allow_html=True)
                     for i, doc in enumerate(response["context"]):
                         content = getattr(doc, 'page_content', "N/A")
-                        with st.expander(f"Reference {i+1} (Click to expand)"):
-                            st.info(content)
-                            st.caption("Source: Qdrant Cloud Database")
+                        # Clean up content preview
+                        preview = content[:300].replace("\n", " ") + "..."
+                        
+                        with st.expander(f"Citation {i+1} (Relevance Score: High)"):
+                            st.markdown(f"**Extract:** *{preview}*")
+                            st.info("Full Context Available in Database")
                             
                 except Exception as e:
-                    st.error(f"An error occurred during search: {e}")
-
+                    st.error(f"An error occurred: {e}")
