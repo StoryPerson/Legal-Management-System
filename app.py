@@ -25,8 +25,35 @@ if st.sidebar.button("🗑️ Clear Chat History", type="primary", use_container
 
 if mode == "Home":
     st.title("AI Powered Legal Case Management")
-    st.markdown("### Modules available in the sidebar.")
-    st.info("Select a tool to begin.")
+    st.markdown("### Streamlining Case Management & Research")
+    st.info("Select a tool from the sidebar to get started.")
+
+    # Use Columns with Custom CSS Cards for visibility
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>📂 Classification</h3>
+            <p>Automatically categorize court cases into Civil, Criminal, or Constitutional domains.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>⚡ Prioritization</h3>
+            <p>Predict the urgency level (High, Medium, Low) of incoming legal cases.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col3:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>💬 Legal Assistant</h3>
+            <p>Chat with your legal database using AI memory and precision re-ranking.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif mode == "Case Classification":
     st.title("⚖️ Case Classification")
@@ -99,3 +126,4 @@ elif mode == "Legal Assistant (Chat)":
                 HumanMessage(content=prompt),
                 AIMessage(content=answer)
             ])
+
