@@ -18,3 +18,5 @@ sentence_transformers
 langchain_chroma
 langchain_huggingface
 langchain_qdrant
+langchain_classic
+
