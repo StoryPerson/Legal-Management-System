@@ -116,8 +116,8 @@ if mode == "Home":
 # Case Classification
 if mode == "Case Classification":
     st.title("⚖️ Case Classification")
-    pipeline_path = "Case Cateogarization/voting_pipeline.pkl"
-    label_path = "Case Cateogarization/label_encoder.pkl"
+    pipeline_path = "Case Classification/voting_pipeline.pkl"
+    label_path = "Case Classification/label_encoder.pkl"
     pipeline = load_pickle(pipeline_path)
     label_encoder = load_pickle(label_path)
     text_input = st.text_area("Paste case text here:", height=300)
@@ -194,14 +194,28 @@ if mode == "Legal Assistant (Chat)":
 
             # Memory Step 2: Answer Question
             qa_system_prompt = """
-            You are a Senior Legal Research Assistant. Analyze the provided legal documents and answer the user's question with high precision.
+            You are a Senior Legal Research Assistant. Your mandate is to analyze the provided legal documents and answer the user's question with **forensic precision**.
+            
+            ### CRITICAL INSTRUCTIONS:
+            1. **Zero External Knowledge:** You must answer strictly based *only* on the provided "Context" below. Do not use outside legal knowledge, general principles, or laws not explicitly present in the text.
+            2. **No Hallucination:** If the answer is not found in the context, you must state: *"The provided legal documents do not contain sufficient information to answer this specific query."* Do not attempt to guess or fabricate an answer.
+            3. **Evidence-Based:** Every claim you make must be supported by a specific reference from the text (e.g., "According to Case X...").
+            4. **Tone:** Maintain a formal, objective, and non-advisory tone (avoid saying "You should").
 
-            STRICT INSTRUCTIONS:
-            1. Answer ONLY using provided Context.
-            2. Structure: Executive Summary, Relevant Precedents, Conclusion.
-            3. If answer not in context, say so.
+            ### REQUIRED OUTPUT FORMAT:
+            
+            #### 1. Executive Summary
+            (A direct, 2-3 sentence answer to the core legal question.)
 
-            Context:
+            #### 2. Relevant Precedents & Analysis
+            (Detailed bullet points analyzing the retrieved text.)
+            * **[Case/Section Name]:** [Key holding or fact relevant to the question]
+            * **[Case/Section Name]:** [Key holding or fact relevant to the question]
+
+            #### 3. Conclusion
+            (A final summary statement on the legal position based solely on the provided context.)
+
+            ### CONTEXT:
             {context}
             """
             qa_prompt = ChatPromptTemplate.from_messages([
@@ -254,4 +268,3 @@ if mode == "Legal Assistant (Chat)":
                 st.session_state.chat_history.append(AIMessage(content=answer))
             except Exception as e:
                 st.error(f"Error: {e}")
-
