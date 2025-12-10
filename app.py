@@ -116,8 +116,8 @@ if mode == "Home":
 # Case Classification
 if mode == "Case Classification":
     st.title("⚖️ Case Classification")
-    pipeline_path = "Case Cateogarization/voting_pipeline.pkl"
-    label_path = "Case Cateogarization/label_encoder.pkl"
+    pipeline_path = "Case Classification/voting_pipeline.pkl"
+    label_path = "Case Classification/label_encoder.pkl"
     pipeline = load_pickle(pipeline_path)
     label_encoder = load_pickle(label_path)
     text_input = st.text_area("Paste case text here:", height=300)
@@ -254,4 +254,5 @@ if mode == "Legal Assistant (Chat)":
                 st.session_state.chat_history.append(AIMessage(content=answer))
             except Exception as e:
                 st.error(f"Error: {e}")
+
 
