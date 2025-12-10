@@ -10,7 +10,6 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from dotenv import load_dotenv
 
 # --- CORRECTED IMPORTS FOR QDRANT & LANGCHAIN ---
 from langchain_qdrant import QdrantVectorStore
@@ -20,9 +19,6 @@ from langchain_groq import ChatGroq
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-
-# Load environment variables
-load_dotenv(dotenv_path=".env", override=True)
 
 # Page config
 st.set_page_config(page_title="Legal Case Management & Precedent Search", layout="wide")
@@ -147,43 +143,33 @@ if mode == "Case Prioritization":
             pred_label = label_encoder.inverse_transform(pred_enc)[0] if label_encoder else str(pred_enc[0])
             st.success(f"Predicted Case Priority: **{pred_label}**")
 
-# Legal Precedent Search (RAG) - UPDATED & FIXED
+# Legal Precedent Search (RAG)
 if mode == "Legal Precedent Search (RAG)":
     st.title("📚 Legal Precedent Retrieval Engine (RAG)")
     st.markdown("Ask a question like: *What were previous precedents regarding X?*")
 
-    # Qdrant Configuration
+    # Qdrant Configuration using secrets
     QDRANT_URL = "https://2191fd84-3737-4604-ac35-435135b72cf3.us-east4-0.gcp.cloud.qdrant.io"
-    # ⚠️ MAKE SURE TO PASTE YOUR KEY HERE
-    QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.j5Kv9gmGOtLHLL4RGMJpeqzdVJSrbmsFLlNdbtvmtYs"
+    QDRANT_API_KEY = st.secrets["QDRANT_API_KEY"]
     COLLECTION_NAME = "legal_precedents"
+    
+    # Groq API key from secrets
+    GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
     @st.cache_resource
     def load_rag_chain():
         try:
-            # 1. Setup Embeddings (Must match what you used for migration)
             embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-            # 2. Connect to Qdrant Cloud
             client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
-            
-            # 3. Create Vector Store Wrapper (CORRECTED)
-            # We use 'QdrantVectorStore' instead of 'Qdrant'
-            # We use 'embedding' (singular) instead of 'embeddings'
             vector_store = QdrantVectorStore(
                 client=client,
                 collection_name=COLLECTION_NAME,
                 embedding=embeddings, 
             )
 
-            # 4. Setup LLM (Groq)
-            api_key = os.getenv("GROQ_API_KEY") or os.getenv("api_key")
-            if not api_key:
-                return {"error": "Groq API key not found in .env file."}
-            
-            llm = ChatGroq(model_name="openai/gpt-oss-20b", api_key=api_key, temperature=0.2)
+            llm = ChatGroq(model_name="openai/gpt-oss-20b", api_key=GROQ_API_KEY, temperature=0.2)
 
-            # 5. Create Prompt Template
             prompt = ChatPromptTemplate.from_template(
                 """
                 You are a legal assistant. Use the following pieces of retrieved context to answer the question.
@@ -198,7 +184,6 @@ if mode == "Legal Precedent Search (RAG)":
                 """
             )
 
-            # 6. Build Chain
             document_chain = create_stuff_documents_chain(llm, prompt)
             retriever = vector_store.as_retriever(search_kwargs={"k": 5})
             rag_chain = create_retrieval_chain(retriever, document_chain)
@@ -216,9 +201,9 @@ if mode == "Legal Precedent Search (RAG)":
         st.stop()
 
     rag_chain = rag_resources["rag_chain"]
-    
+
     query = st.text_area("Enter your legal question:", height=150)
-    
+
     if st.button("Search Precedents"):
         if not query.strip():
             st.warning("Please enter a question.")
@@ -231,15 +216,11 @@ if mode == "Legal Precedent Search (RAG)":
                     st.subheader("Answer:")
                     st.write(answer)
                     
-                    # Optional: Show Sources
                     with st.expander("View Source Documents"):
                         for i, doc in enumerate(response["context"]):
                             st.markdown(f"**Source {i+1}:**")
-                            # Safely access page_content with fallback
                             content = getattr(doc, 'page_content', "No content available")
                             st.caption(content[:500] + "...")
                             st.divider()
-                            
                 except Exception as e:
-
                     st.error(f"Error during retrieval: {e}")
