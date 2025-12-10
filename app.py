@@ -9,7 +9,7 @@ import pickle
 import re
 import nltk
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from nltk.stem import WordNetLemmatize
 from dotenv import load_dotenv
 
 # --- CORRECTED IMPORTS FOR QDRANT & LANGCHAIN ---
@@ -243,3 +243,4 @@ if mode == "Legal Precedent Search (RAG)":
                 except Exception as e:
 
                     st.error(f"Error during retrieval: {e}")
+
